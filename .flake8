@@ -1,0 +1,17 @@
+[flake8]
+exclude = 
+    .git
+    __pycache__
+    .tox
+    .eggs
+    *.egg
+    .venv
+    venv
+    */site-packages/*
+    ./*/site-packages/*
+    ./.venv/*
+    ./*/migrations
+
+max-line-length = 79
+import-order-style = google
+application-import-names = catalog, core, homepage, feedback, user, project, neti
