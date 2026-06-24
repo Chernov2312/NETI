@@ -4,10 +4,12 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from core.models import UpdateBaseModel
+from user.managers import UserManager
 from user.validators import RoleValidate
 
 
 class User(AbstractUser, UpdateBaseModel):
+    objects = UserManager()
     username = models.CharField(
         unique=True,
         null=False,

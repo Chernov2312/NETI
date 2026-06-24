@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center g-4">
+        
+        <!-- Левая колонка: Карточка профиля и аватар -->
+        <div class="col-12 col-md-4 col-lg-3">
+            <div class="card shadow-sm border border-light-subtle rounded-3 bg-light text-center p-4">
+                <div class="mb-3 d-flex justify-content-center">
+                    {% if user.profile.avatar %}
+                        <!-- Если у профиля настроен метод get_preview (300x300), используем его -->
+                        <img src="{{ user.profile.get_preview.url }}" class="rounded-circle img-thumbnail shadow-sm" alt="Аватар" style="width: 130px; height: 130px; object-fit: cover;">
+                    {% else %}
+                        <!-- Дефолтная заглушка, если аватар не загружен -->
+                        <div class="rounded-circle bg-secondary-subtle d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 130px; height: 130px;">
+                            <span class="fs-1 text-secondary text-uppercase fw-bold">{{ user.username|slice:":2" }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h4 class="fw-bold text-dark mb-1">{{ user.username }}</h4>
+                
+                <!-- Отображение роли пользователя на основе вашего валидатора ролей -->
+                <p class="text-muted small mb-3">
+                    {% if user.profile.role == 'moderator' %}
+                        <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-semibold text-uppercase" style="font-size: 0.75rem;">Модератор</span>
+                    {% else %}
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold text-uppercase" style="font-size: 0.75rem;">Студент</span>
+                    {% endif %}
+                </p>
+
+                <div class="border-top pt-3 w-100">
+                    <a href="#" class="btn btn-outline-primary btn-sm w-100 mb-2 rounded-pill fw-medium">Редактировать профиль</a>
+                    <a href="{% url 'authentication:logout' %}" class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-medium">Выйти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка: Детальная информация и статистика -->
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card shadow-sm border border-light-subtle rounded-3 bg-white p-4 h-100">
+                <h3 class="fw-bold text-dark mb-4 pb-2 border-bottom border-light-subtle">Личные данные</h3>
+                
+                <!-- Сетка с информацией -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Имя пользователя (Логин)</label>
+                        <div class="form-control-plaintext border-bottom p-1 text-dark fw-medium">{{ user.username }}</div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Email адрес</label>
+                        <div class="form-control-plaintext border-bottom p-1 text-dark fw-medium">{{ user.email|default:"Не указан" }}</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold text-secondary mb-1">О себе (Био)</label>
+                        <div class="form-control-plaintext border-bottom p-1 text-muted small">
+                            {{ user.profile.bio|default:"Пользователь пока ничего не рассказал о себе." }}
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="fw-bold text-dark mb-3">Ваша активность</h4>
+                
+                <!-- Информационные плашки со статистикой (используем связи моделей) -->
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <div class="p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="text-secondary small mb-1 fw-semibold">Создано проектов</h6>
+                                <!-- Быстрая проверка количества связанных проектов через related_name -->
+                                <h3 class="fw-bold text-dark mb-0">{{ user.projects.count }}</h3>
+                            </div>
+                            <a href="{% url 'user:projects' %}" class="btn btn-sm btn-primary rounded-circle px-2 py-1" title="Смотреть проекты">→</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="text-secondary small mb-1 fw-semibold">Выставлено оценок</h6>
+                                <!-- Быстрая проверка количества выставленных рейтингов -->
+                                <h3 class="fw-bold text-dark mb-0">{{ user.ratings.count }}</h3>
+                            </div>
+                            <span class="text-warning fs-4">★</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

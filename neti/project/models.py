@@ -4,15 +4,17 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from core.models import NameBaseModel, UpdateBaseModel
+from core.models import ImageBaseModel, NameBaseModel, UpdateBaseModel
+from project.managers import ProjectManager
 from project.utils import save_file_path_document, save_file_path_image
 
 
-class Tags(UpdateBaseModel, NameBaseModel):
+class Tag(UpdateBaseModel, NameBaseModel):
     slug = AutoSlugField(populate_from='name', unique=True, editable=True)
 
 
 class Project(UpdateBaseModel, NameBaseModel):
+    objects = ProjectManager()
     description = models.CharField(
         max_length=1000,
         verbose_name=_('Описание'),
@@ -21,6 +23,7 @@ class Project(UpdateBaseModel, NameBaseModel):
     )
     document = models.FileField(
         upload_to=save_file_path_document,
+        max_length=500,
         blank=False,
         null=False,
     )
@@ -31,7 +34,7 @@ class Project(UpdateBaseModel, NameBaseModel):
         related_name='projects',
     )
     tags = models.ManyToManyField(
-        Tags,
+        Tag,
         related_name='projects',
         verbose_name='теги',
         blank=True,
@@ -62,7 +65,7 @@ class Rating(models.Model):
         verbose_name_plural = _('Рейтинги')
 
 
-class Image(UpdateBaseModel):
+class Image(UpdateBaseModel, ImageBaseModel):
     image = models.ImageField(
         upload_to=save_file_path_image,
         null=True,
@@ -75,7 +78,7 @@ class Image(UpdateBaseModel):
     )
 
 
-class MainImage(UpdateBaseModel):
+class MainImage(UpdateBaseModel, ImageBaseModel):
     main_image = models.ImageField(
         upload_to=save_file_path_image,
         null=False,

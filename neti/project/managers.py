@@ -1,8 +1,7 @@
+__all__ = ()
 from django.apps import apps
 from django.db import models
 from django.db.models import Avg, Prefetch
-
-__all__ = ['ProjectManager']
 
 
 class ProjectManager(models.Manager):
@@ -13,7 +12,7 @@ class ProjectManager(models.Manager):
 
         queryset = (
             self.get_queryset()
-            .select_related('main_image')
+            .select_related('main_image', 'user')
             .annotate(average_rating=Avg('ratings__value'))
         )
 
@@ -23,6 +22,8 @@ class ProjectManager(models.Manager):
             'description',
             'main_image__main_image',
             'updated_at',
+            'user__id',
+            'user__username',
         ]
 
         if include_gallery:
@@ -37,7 +38,5 @@ class ProjectManager(models.Manager):
             '-updated_at',
         )
 
-    def get_project_info(self):
-        return self._base_queryset(include_gallery=True).order_by(
-            '-updated_at',
-        )
+    def get_project_info(self, id):
+        return self._base_queryset(include_gallery=True).filter(id=id).first()

@@ -11,7 +11,8 @@ exclude =
     ./*/site-packages/*
     ./.venv/*
     ./*/migrations
+    manage.py
 
 max-line-length = 79
 import-order-style = google
-application-import-names = catalog, core, homepage, feedback, user, project, neti
+application-import-names = auth, core, homepage, feedback, user, project, neti
