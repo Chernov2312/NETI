@@ -30,7 +30,7 @@
         <div class="mb-3 d-flex flex-wrap gap-1">
             {% for tag in project.tags.all %}
                 <a class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none rounded-pill"
-                   href="{% url 'project:project_list' %}{% querystring tag=tag.slug %}">#{{ tag.name }}</a>
+                   href="{% url 'project:project_list' %}{% querystring tag=tag.slug page=None %}">#{{ tag.name }}</a>
             {% empty %}
                 <span class="text-muted small-8" style="font-size: 0.75rem;">Без тегов</span>
             {% endfor %}

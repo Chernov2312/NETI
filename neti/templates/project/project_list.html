@@ -11,12 +11,26 @@
         {% endif %}
     </div>
 
+    {% if search_form %}
+        <form method="get" action="{% url 'project:project_list' %}" role="search" class="mb-4">
+            {% if selected_tag %}
+                <input type="hidden" name="tag" value="{{ selected_tag.slug }}">
+            {% endif %}
+            <label for="{{ search_form.q.id_for_label }}" class="form-label">{{ search_form.q.label }}</label>
+            <div class="input-group">
+                {{ search_form.q }}
+                <button type="submit" class="btn btn-primary">Найти</button>
+            </div>
+            {{ search_form.q.errors }}
+        </form>
+    {% endif %}
+
     {% if tags %}
         <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Фильтр по тегам">
-            <a href="{% url 'project:project_list' %}"
+            <a href="{% url 'project:project_list' %}{% querystring tag=None page=None %}"
                class="btn btn-sm {% if selected_tag %}btn-outline-secondary{% else %}btn-secondary{% endif %}">Все теги</a>
             {% for tag in tags %}
-                <a href="{% url 'project:project_list' %}{% querystring tag=tag.slug %}"
+                <a href="{% url 'project:project_list' %}{% querystring tag=tag.slug page=None %}"
                    class="btn btn-sm {% if selected_tag == tag %}btn-secondary{% else %}btn-outline-secondary{% endif %}">{{ tag.name }}</a>
             {% endfor %}
         </nav>
@@ -29,9 +43,42 @@
             </div>
         {% empty %}
             <div class="col-12 text-center py-5">
-                <h4 class="text-muted">Проекты пока не созданы.</h4>
+                <p class="text-muted">
+                    {% if search_form.q.value or selected_tag %}
+                        Проекты не найдены.
+                    {% else %}
+                        Проекты пока не созданы.
+                    {% endif %}
+                </p>
             </div>
         {% endfor %}
     </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="mt-4" aria-label="Страницы каталога">
+            <ul class="pagination flex-wrap justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" rel="prev" href="{% querystring page=page_obj.previous_page_number %}">Назад</a>
+                    </li>
+                {% endif %}
+                {% for number in page_range %}
+                    {% if number == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link" aria-current="page">{{ number }}</span>
+                        </li>
+                    {% elif number == page_obj.paginator.ELLIPSIS %}
+                        <li class="page-item disabled"><span class="page-link">{{ number }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="{% querystring page=number %}">{{ number }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" rel="next" href="{% querystring page=page_obj.next_page_number %}">Вперёд</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
 </div>
 {% endblock %}

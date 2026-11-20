@@ -20,6 +20,7 @@ from project.models import (
     Rating,
     Tag,
 )
+from project.views import PROJECTS_PER_PAGE
 from user.models import User
 
 
@@ -99,6 +100,74 @@ class ProjectTests(TestCase):
         self.assertNotContains(response, 'Другой проект')
         response = self.client.get(url, {'tag': 'missing'})
         self.assertEqual(response.status_code, 404)
+
+    def test_catalog_search_matches_part_of_title_with_selected_tag(self):
+        station = Project.objects.create(
+            name='Arduino: датчик 100%',
+            user=self.owner,
+            document='station.pdf',
+        )
+        Project.objects.create(
+            name='Arduino: датчик 1000',
+            user=self.owner,
+            document='untagged.pdf',
+        )
+        description_only = Project.objects.create(
+            name='Другая станция',
+            description='Arduino: датчик 100%',
+            user=self.owner,
+            document='description.pdf',
+        )
+        self.tag.projects.add(station, description_only)
+        url = reverse('project:project_list')
+        response = self.client.get(
+            url, {'q': '  aRdUiNo  ', 'tag': self.tag.slug},
+        )
+        self.assertEqual(list(response.context['projects']), [station])
+        response = self.client.get(url, {'q': '100%'})
+        self.assertEqual(list(response.context['projects']), [station])
+
+    def test_catalog_invalid_query_keeps_form_and_shows_no_results(self):
+        url = reverse('project:project_list')
+        for query in ('x' * 101, 'x\x00'):
+            with self.subTest(query=query):
+                response = self.client.get(url, {'q': query})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn('q', response.context['search_form'].errors)
+                self.assertEqual(list(response.context['projects']), [])
+        response = self.client.get(url, {'q': 'Несуществующий проект'})
+        self.assertContains(response, 'Проекты не найдены.')
+
+    def test_catalog_pagination_keeps_filters_and_stable_order(self):
+        items = Project.objects.bulk_create(
+            [
+                Project(
+                    name=f'Arduino {index}',
+                    slug=f'arduino-{index}',
+                    user=self.owner,
+                    document='station.pdf',
+                )
+                for index in range(PROJECTS_PER_PAGE + 2)
+            ],
+        )
+        self.tag.projects.add(*items)
+        Project.objects.filter(pk__in=[item.pk for item in items]).update(
+            updated_at=self.project.updated_at,
+        )
+        expected = sorted(items, key=lambda item: item.pk, reverse=True)
+        url = reverse('project:project_list')
+        filters = {'q': 'Arduino', 'tag': self.tag.slug}
+
+        response = self.client.get(url, {**filters, 'page': 'invalid'})
+        self.assertEqual(list(response.context['projects']), expected[:-2])
+        self.assertContains(
+            response,
+            f'q=Arduino&amp;tag={self.tag.slug}&amp;page=2',
+        )
+        response = self.client.get(url, {**filters, 'page': 999})
+        self.assertEqual(response.context['page_obj'].number, 2)
+        self.assertEqual(list(response.context['projects']), expected[-2:])
+        self.assertContains(response, 'href="/project/?q=Arduino"')
 
     def test_creation_requires_authentication(self):
         login = reverse('authentication:login')

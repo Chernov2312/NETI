@@ -178,6 +178,17 @@ class RatingForm(forms.Form):
     value = forms.IntegerField(label='Ваша оценка', min_value=1, max_value=10)
 
 
+class ProjectSearchForm(forms.Form):
+    q = forms.CharField(
+        label='Поиск по названию',
+        max_length=Project._meta.get_field('name').max_length,
+        required=False,
+        widget=forms.TextInput(
+            attrs={'type': 'search', 'class': 'form-control'},
+        ),
+    )
+
+
 class ProjectReportForm(forms.ModelForm):
     class Meta:
         model = ProjectReport

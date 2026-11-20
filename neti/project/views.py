@@ -2,13 +2,21 @@ __all__ = ()
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
-from project.forms import ProjectForm, ProjectReportForm, RatingForm
+from project.forms import (
+    ProjectForm,
+    ProjectReportForm,
+    ProjectSearchForm,
+    RatingForm,
+)
 from project.models import Project, ProjectReport, Rating, Tag
+
+PROJECTS_PER_PAGE = 12
 
 
 def project_list(request):
@@ -18,14 +26,27 @@ def project_list(request):
     if slug := request.GET.get('tag'):
         selected_tag = get_object_or_404(tags, slug=slug)
         projects = projects.filter(tags=selected_tag)
+
+    search_form = ProjectSearchForm(request.GET)
+    if search_form.is_valid():
+        if query := search_form.cleaned_data['q']:
+            projects = projects.filter(name__icontains=query)
+    else:
+        projects = projects.none()
+
+    paginator = Paginator(projects, PROJECTS_PER_PAGE)
+    page = paginator.get_page(request.GET.get('page'))
     return render(
         request,
         'project/project_list.html',
         {
             'title': 'Каталог проектов',
-            'projects': projects,
+            'projects': page,
             'tags': tags,
             'selected_tag': selected_tag,
+            'search_form': search_form,
+            'page_obj': page,
+            'page_range': paginator.get_elided_page_range(page.number),
         },
     )
 

@@ -52,6 +52,12 @@ class Project(UpdateBaseModel, NameBaseModel):
     class Meta:
         verbose_name = _('проект')
         verbose_name_plural = _('проекты')
+        indexes = [
+            models.Index(
+                fields=('-updated_at', '-id'),
+                name='project_updated_id_idx',
+            ),
+        ]
 
     def __str__(self):
         return self.name

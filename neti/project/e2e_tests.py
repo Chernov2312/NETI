@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -125,6 +126,26 @@ class ProjectBrowserTests(StaticLiveServerTestCase):
         expect(rating).to_have_value('6')
         average = page.get_by_text(re.compile(r'Средняя оценка 6[,.]0 из 10'))
         expect(average).to_be_visible()
+
+    def test_search_and_pagination_keep_selected_tag(self):
+        self.enterContext(patch('project.views.PROJECTS_PER_PAGE', 1))
+        page = self.page
+        page.goto(reverse('project:project_list'))
+        page.get_by_role('link', name='Экология', exact=True).click()
+        search = page.get_by_label('Поиск по названию')
+        search.fill('А')
+        page.get_by_role('button', name='Найти').click()
+        pagination = page.get_by_role('navigation', name='Страницы каталога')
+        pagination.get_by_role('link', name='2', exact=True).click()
+        expect(pagination.locator('[aria-current="page"]')).to_have_text('2')
+        expect(search).to_have_value('А')
+        expect(page.locator('form [name="tag"]')).to_have_value('ecology')
+
+        search.fill('МЕТЕО')
+        page.get_by_role('button', name='Найти').click()
+        station = page.get_by_role('heading', name=self.station_name)
+        expect(station).to_be_visible()
+        expect(pagination).to_have_count(0)
 
     def test_report_queue_and_moderator_permissions(self):
         page = self.page
