@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Жалобы на проекты — NETI{% endblock %}
+
+{% block maincontent %}
+<div class="container py-5">
+  <h1 class="h2 mb-4">Жалобы на проекты</h1>
+  {% for report in reports %}
+    <article class="card card-body mb-3">
+      <h2 class="h5">
+        <a href="{% url 'project:project_detail' report.project_id %}">{{ report.project.name }}</a>
+      </h2>
+      <p class="small text-secondary mb-2">@{{ report.reporter.username }} · {{ report.created_at }}</p>
+      <p class="text-break">{{ report.reason|linebreaksbr }}</p>
+      <form method="post" action="{% url 'project:report_resolve' report.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-primary">Отметить как рассмотренную</button>
+      </form>
+    </article>
+  {% empty %}
+    <p>Жалоб, ожидающих рассмотрения, нет.</p>
+  {% endfor %}
+</div>
+{% endblock %}

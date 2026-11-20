@@ -5,12 +5,19 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from core.models import ImageBaseModel, NameBaseModel, UpdateBaseModel
-from project.managers import ProjectManager
+from project.managers import ProjectManager, ProjectReportQuerySet
 from project.utils import save_file_path_document, save_file_path_image
 
 
 class Tag(UpdateBaseModel, NameBaseModel):
     slug = AutoSlugField(populate_from='name', unique=True, editable=True)
+
+    class Meta:
+        verbose_name = _('тег')
+        verbose_name_plural = _('теги')
+
+    def __str__(self):
+        return self.name
 
 
 class Project(UpdateBaseModel, NameBaseModel):
@@ -42,6 +49,13 @@ class Project(UpdateBaseModel, NameBaseModel):
     )
     slug = AutoSlugField(populate_from='name', unique=True, editable=True)
 
+    class Meta:
+        verbose_name = _('проект')
+        verbose_name_plural = _('проекты')
+
+    def __str__(self):
+        return self.name
+
 
 class Rating(models.Model):
     project = models.ForeignKey(
@@ -65,9 +79,45 @@ class Rating(models.Model):
         verbose_name_plural = _('Рейтинги')
 
 
+class ProjectReport(models.Model):
+    objects = ProjectReportQuerySet.as_manager()
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='reports',
+    )
+    reporter = models.ForeignKey(
+        'user.User',
+        on_delete=models.CASCADE,
+        related_name='project_reports',
+    )
+    reason = models.CharField(max_length=1000, verbose_name=_('Причина'))
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.ForeignKey(
+        'user.User',
+        on_delete=models.SET_NULL,
+        related_name='resolved_project_reports',
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _('жалоба на проект')
+        verbose_name_plural = _('жалобы на проекты')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('project', 'reporter'),
+                condition=models.Q(resolved_at__isnull=True),
+                name='unique_pending_project_report',
+            ),
+        ]
+
+
 class Image(UpdateBaseModel, ImageBaseModel):
     image = models.ImageField(
         upload_to=save_file_path_image,
+        max_length=255,
         null=True,
     )
     project = models.ForeignKey(
@@ -77,10 +127,15 @@ class Image(UpdateBaseModel, ImageBaseModel):
         related_name='images',
     )
 
+    class Meta:
+        verbose_name = _('изображение галереи')
+        verbose_name_plural = _('изображения галереи')
+
 
 class MainImage(UpdateBaseModel, ImageBaseModel):
     main_image = models.ImageField(
         upload_to=save_file_path_image,
+        max_length=255,
         null=False,
     )
     project = models.OneToOneField(
@@ -89,3 +144,7 @@ class MainImage(UpdateBaseModel, ImageBaseModel):
         on_delete=models.CASCADE,
         related_name='main_image',
     )
+
+    class Meta:
+        verbose_name = _('главное изображение')
+        verbose_name_plural = _('главные изображения')

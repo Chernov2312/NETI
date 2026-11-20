@@ -34,6 +34,7 @@ env/
 *.log
 media/
 staticfiles/
+/neti/collect_static/
 
 .env
 .env.local

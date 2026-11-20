@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — NETI{% endblock %}
+
+{% block maincontent %}
+<div class="container py-5">
+  <h1 class="h2 mb-4">{{ title }}</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if is_edit and form.instance.document %}
+      <p><a href="{% url 'project:project_document' form.instance.pk %}">Скачать текущий документ</a></p>
+    {% endif %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    {% if is_edit %}
+      <a href="{% url 'project:project_detail' form.instance.pk %}" class="btn btn-outline-secondary">Отмена</a>
+    {% else %}
+      <a href="{% url 'user:projects' %}" class="btn btn-outline-secondary">Отмена</a>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}

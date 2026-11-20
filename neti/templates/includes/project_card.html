@@ -1,9 +1,15 @@
 <div class="card h-100 shadow-sm border border-light-subtle rounded-3 bg-white position-relative transition-hover">
     <div class="position-relative overflow-hidden border-bottom" style="height: 200px; border-top-left-radius: calc(0.375rem - 1px); border-top-right-radius: calc(0.375rem - 1px);">
-    	<img src="{{ project.main_image.get_image_300x300 }}" class="w-100 h-100 object-fit-cover" alt="{{ project.name }}">
+        {% with thumbnail=project.main_image.get_image_300x300 %}
+            {% if thumbnail %}
+                <img src="{{ thumbnail }}" class="w-100 h-100 object-fit-cover" alt="{{ project.name }}" loading="lazy">
+            {% else %}
+                <div class="bg-light text-secondary d-flex h-100 align-items-center justify-content-center">Нет изображения</div>
+            {% endif %}
+        {% endwith %}
         
         <div class="position-absolute top-0 end-0 m-2 bg-dark bg-opacity-75 text-warning px-2 py-1 rounded small fw-bold shadow-sm">
-            ★ {{ project.average_rating|default:"0.0"|floatformat:1 }}
+            {% if project.average_rating is not None %}★ {{ project.average_rating|floatformat:1 }}{% else %}Нет оценок{% endif %}
         </div>
     </div>
 
@@ -23,9 +29,8 @@
 
         <div class="mb-3 d-flex flex-wrap gap-1">
             {% for tag in project.tags.all %}
-                <span class="badge bg-secondary-subtle text-secondary-emphasis fw-semibold rounded-pill px-2 py-1" style="font-size: 0.7rem;">
-                    #{{ tag.name }}
-                </span>
+                <a class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none rounded-pill"
+                   href="{% url 'project:project_list' %}{% querystring tag=tag.slug %}">#{{ tag.name }}</a>
             {% empty %}
                 <span class="text-muted small-8" style="font-size: 0.75rem;">Без тегов</span>
             {% endfor %}

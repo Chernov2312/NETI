@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Пожаловаться на проект — NETI{% endblock %}
+
+{% block maincontent %}
+<div class="container py-5">
+  <div class="mx-auto col-md-8 col-lg-6">
+    <h1 class="h2 mb-3">Пожаловаться на проект</h1>
+    <p class="text-secondary">{{ project.name }}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Отправить жалобу</button>
+      <a class="btn btn-outline-secondary" href="{% url 'project:project_detail' project.pk %}">Отмена</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

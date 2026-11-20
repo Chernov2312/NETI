@@ -1,14 +1,14 @@
 __all__ = ()
 from django import forms
+from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.hashers import check_password
 
 from user.models import User
 
 
 class UserRegisterForm(UserCreationForm):
 
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(label='Email')
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -17,7 +17,7 @@ class UserRegisterForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for _, field in self.fields.items():
+        for field in self.fields.values():
             field.widget.attrs.update(
                 {
                     'class': 'form-control',
@@ -29,7 +29,6 @@ class UserRegisterForm(UserCreationForm):
 class UserAuthorizationForm(forms.Form):
     login = forms.CharField(
         label='Логин или email',
-        max_length=100,
         widget=forms.TextInput(
             attrs={
                 'class': 'form-control',
@@ -39,6 +38,7 @@ class UserAuthorizationForm(forms.Form):
     )
     password = forms.CharField(
         label='Пароль',
+        strip=False,
         widget=forms.PasswordInput(
             attrs={
                 'class': 'form-control',
@@ -47,18 +47,26 @@ class UserAuthorizationForm(forms.Form):
         ),
     )
 
+    def __init__(self, *args, request=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+
     def clean(self):
         cleaned_data = super().clean()
-        login_value = cleaned_data.get('login')
-        password_value = cleaned_data.get('password')
+        if self.errors:
+            return cleaned_data
 
-        user = User.objects.get_by_username(login_value)
+        login = cleaned_data['login']
+        user = User.objects.get_by_username(login)
         if user is None:
-            user = User.objects.get_by_email(login_value)
-        invalid_credentials_message = 'Неверный логин или пароль.'
+            user = User.objects.get_by_email(login)
 
-        if user is None or not check_password(password_value, user.password):
-            raise forms.ValidationError(invalid_credentials_message)
+        self.user = authenticate(
+            self.request,
+            username=user.username if user else login,
+            password=cleaned_data['password'],
+        )
+        if self.user is None:
+            raise forms.ValidationError('Неверный логин или пароль.')
 
-        self.user = user
         return cleaned_data

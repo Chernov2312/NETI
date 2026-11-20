@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} — NETI{% endblock %}
+
+{% block maincontent %}
+<article class="container py-5">
+  <a href="{% url 'project:project_list' %}" class="d-inline-block mb-3">Каталог проектов</a>
+  <h1>{{ project.name }}</h1>
+  <p class="text-secondary">@{{ project.user.username }}</p>
+  {% for message in messages %}
+    <p class="alert alert-{{ message.tags|default:'info' }}" role="status">{{ message }}</p>
+  {% endfor %}
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    {% if project.document %}
+      <a href="{% url 'project:project_document' project.pk %}" class="btn btn-primary">Скачать документ</a>
+    {% endif %}
+    {% if can_manage %}
+      <a href="{% url 'project:project_edit' project.pk %}" class="btn btn-outline-secondary">Редактировать</a>
+      <a href="{% url 'project:project_delete' project.pk %}" class="btn btn-outline-danger">Удалить</a>
+    {% endif %}
+    <a href="{% url 'project:project_report' project.pk %}" class="btn btn-outline-secondary">Пожаловаться</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      {% if project.main_image.main_image %}
+        <img src="{{ project.main_image.main_image.url }}" class="img-fluid rounded mb-4" alt="{{ project.name }}">
+      {% endif %}
+      {{ project.description|default:"Описание отсутствует."|linebreaks }}
+      <div class="d-flex flex-wrap gap-2">
+        {% for tag in project.tags.all %}
+          <a href="{% url 'project:project_list' %}{% querystring tag=tag.slug %}"
+             class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none">#{{ tag.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <aside class="col-lg-4">
+      <div class="card card-body bg-light">
+        <h2 class="h5">Оценки</h2>
+        {% if project.average_rating is not None %}
+          <p>Средняя оценка {{ project.average_rating|floatformat:1 }} из 10</p>
+        {% else %}
+          <p>Оценок пока нет.</p>
+        {% endif %}
+        {% if rating_form %}
+          <form method="post" action="{% url 'project:project_rate' project.pk %}">
+            {% csrf_token %}
+            {{ rating_form.as_p }}
+            <button type="submit" class="btn btn-primary">Сохранить оценку</button>
+          </form>
+        {% else %}
+          <a href="{% url 'authentication:login' %}{% querystring next=request.path %}">Войти, чтобы оценить проект</a>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+
+  {% if project.images.all %}
+    <section class="mt-5">
+      <h2 class="h4">Галерея</h2>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+        {% for photo in project.images.all %}
+          {% if photo.image %}
+            <div class="col">
+              <a href="{{ photo.image.url }}">
+                <img src="{{ photo.image.url }}" class="img-fluid rounded" alt="Изображение проекта {{ project.name }}" loading="lazy">
+              </a>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</article>
+{% endblock %}

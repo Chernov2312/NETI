@@ -21,6 +21,9 @@
 
                     <form method="post" novalidate>
                         {% csrf_token %}
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
 
                         {% for field in form %}
                             <div class="form-floating mb-3 {% if field.errors %}text-danger{% endif %}">
@@ -40,6 +43,9 @@
 
                         {% if request.resolver_match.view_name == 'authentication:login' %}
                             <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Войти</button>
+                            <p class="small mt-3 mb-2">
+                                <a href="{% url 'authentication:password_reset' %}">Забыли пароль?</a>
+                            </p>
                             <p class="small text-muted mb-0">
                                 Ещё нет аккаунта? <a href="{% url 'authentication:registration'%}" class="text-decoration-none fw-semibold">Зарегистрироваться</a>
                             </p>

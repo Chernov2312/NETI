@@ -6,4 +6,4 @@ class ProjectConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'project'
 
-    verbose_name = 'проект'
+    verbose_name = 'Каталог проектов'

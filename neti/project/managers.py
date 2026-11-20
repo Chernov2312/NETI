@@ -2,6 +2,7 @@ __all__ = ()
 from django.apps import apps
 from django.db import models
 from django.db.models import Avg, Prefetch
+from django.utils import timezone
 
 
 class ProjectManager(models.Manager):
@@ -16,10 +17,13 @@ class ProjectManager(models.Manager):
             .annotate(average_rating=Avg('ratings__value'))
         )
 
-        prefetch_list = [Prefetch('tags', queryset=tag.objects.only('name'))]
+        prefetch_list = [
+            Prefetch('tags', queryset=tag.objects.only('name', 'slug')),
+        ]
         project_fields = [
             'name',
             'description',
+            'document',
             'main_image__main_image',
             'updated_at',
             'user__id',
@@ -28,7 +32,11 @@ class ProjectManager(models.Manager):
 
         if include_gallery:
             prefetch_list.append(
-                Prefetch('images', queryset=image.objects.only('image')),
+                Prefetch(
+                    'images',
+                    queryset=image.objects.only('image', 'project_id')
+                    .order_by('created_at'),
+                ),
             )
 
         return queryset.prefetch_related(*prefetch_list).only(*project_fields)
@@ -40,3 +48,11 @@ class ProjectManager(models.Manager):
 
     def get_project_info(self, id):
         return self._base_queryset(include_gallery=True).filter(id=id).first()
+
+
+class ProjectReportQuerySet(models.QuerySet):
+    def resolve(self, user):
+        return self.filter(resolved_at__isnull=True).update(
+            resolved_at=timezone.now(),
+            resolved_by=user,
+        )

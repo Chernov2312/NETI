@@ -3,6 +3,10 @@
         
         <div class="text-center text-md-start">
             <p class="mb-0 text-muted small">© <span id="current-year"></span> Все права защищены.</p>
+            <a href="{% url 'feedback:form' %}">Обратная связь</a>
+            {% if user.is_staff %}
+                <a class="ms-3" href="{% url 'admin:index' %}">Администрирование</a>
+            {% endif %}
 						<h5>Лицей НГТУ</h5>
         </div>
 

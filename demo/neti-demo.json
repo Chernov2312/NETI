@@ -1,0 +1,147 @@
+[
+{
+  "model": "user.user",
+  "pk": "51d496d7-477c-4680-a8e1-cdcd3a92bb08",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$iaEjKigUDUo7ExkmTJavP4$op5hqkhQpM+FRoi9jnn+FZV2PyfjRnN8sVE3R3oMX4E=",
+    "last_login": null,
+    "is_superuser": false,
+    "first_name": "Анна",
+    "last_name": "Смирнова",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-11-20T15:39:54.931Z",
+    "created_at": "2026-11-20T15:39:55.722Z",
+    "updated_at": "2026-11-20T15:39:55.722Z",
+    "username": "demo_student",
+    "email": "demo.student@example.test",
+    "role": "student",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "user.user",
+  "pk": "52437430-51d8-4f97-a159-27e73cba6174",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$FlxlCxT5ixcxiTq68EXqQi$qz72uOoP5CD3ySGGlhR0ALDXkmppmhfpRLbE6cJZMLI=",
+    "last_login": null,
+    "is_superuser": false,
+    "first_name": "Илья",
+    "last_name": "Иванов",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-11-20T15:39:55.736Z",
+    "created_at": "2026-11-20T15:39:56.850Z",
+    "updated_at": "2026-11-20T15:39:56.850Z",
+    "username": "demo_moderator",
+    "email": "demo.moderator@example.test",
+    "role": "moderator",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "project.tag",
+  "pk": "29ffb472-e7d3-4680-bf10-40982fe2a0fa",
+  "fields": {
+    "created_at": "2026-11-20T15:39:56.853Z",
+    "updated_at": "2026-11-20T15:39:56.853Z",
+    "name": "Экология",
+    "slug": "ecology"
+  }
+},
+{
+  "model": "project.tag",
+  "pk": "7ca4d922-81be-4034-998c-ad116f5afbfe",
+  "fields": {
+    "created_at": "2026-11-20T15:39:56.851Z",
+    "updated_at": "2026-11-20T15:39:56.851Z",
+    "name": "Электроника",
+    "slug": "electronics"
+  }
+},
+{
+  "model": "project.project",
+  "pk": "1f986f4d-e418-4d2e-a815-62170d1fef51",
+  "fields": {
+    "created_at": "2026-11-20T15:39:56.858Z",
+    "updated_at": "2026-11-20T15:39:56.858Z",
+    "name": "Карта велопарковок",
+    "description": "Студенческая карта велопарковок возле кампуса с адресами и числом стоек.",
+    "document": "neti-demo/bike-parking.pdf",
+    "user": "52437430-51d8-4f97-a159-27e73cba6174",
+    "slug": "bike-parking-map",
+    "tags": [
+      "29ffb472-e7d3-4680-bf10-40982fe2a0fa"
+    ]
+  }
+},
+{
+  "model": "project.project",
+  "pk": "fb083706-fcf2-4927-9c21-300bb202f468",
+  "fields": {
+    "created_at": "2026-11-20T15:39:56.855Z",
+    "updated_at": "2026-11-20T15:39:56.855Z",
+    "name": "Мини-метеостанция",
+    "description": "Датчик температуры и влажности показывает текущие измерения и график за день.",
+    "document": "neti-demo/weather-station.pdf",
+    "user": "51d496d7-477c-4680-a8e1-cdcd3a92bb08",
+    "slug": "mini-weather-station",
+    "tags": [
+      "29ffb472-e7d3-4680-bf10-40982fe2a0fa",
+      "7ca4d922-81be-4034-998c-ad116f5afbfe"
+    ]
+  }
+},
+{
+  "model": "project.rating",
+  "pk": 1,
+  "fields": {
+    "project": "fb083706-fcf2-4927-9c21-300bb202f468",
+    "user": "52437430-51d8-4f97-a159-27e73cba6174",
+    "value": 8
+  }
+},
+{
+  "model": "project.rating",
+  "pk": 2,
+  "fields": {
+    "project": "1f986f4d-e418-4d2e-a815-62170d1fef51",
+    "user": "51d496d7-477c-4680-a8e1-cdcd3a92bb08",
+    "value": 9
+  }
+},
+{
+  "model": "project.projectreport",
+  "pk": 1,
+  "fields": {
+    "project": "1f986f4d-e418-4d2e-a815-62170d1fef51",
+    "reporter": "51d496d7-477c-4680-a8e1-cdcd3a92bb08",
+    "reason": "На карте стоит уточнить число стоек у второго корпуса.",
+    "created_at": "2026-11-20T15:39:56.866Z",
+    "resolved_at": null,
+    "resolved_by": null
+  }
+},
+{
+  "model": "project.image",
+  "pk": "748a8081-57fe-47a5-9cda-b89f25bf8df1",
+  "fields": {
+    "created_at": "2026-11-20T15:39:56.863Z",
+    "updated_at": "2026-11-20T15:39:56.863Z",
+    "image": "neti-demo/weather-readings.png",
+    "project": "fb083706-fcf2-4927-9c21-300bb202f468"
+  }
+},
+{
+  "model": "project.mainimage",
+  "pk": "1f1e9f17-455c-4317-8336-3cec1f900deb",
+  "fields": {
+    "created_at": "2026-11-20T15:39:56.862Z",
+    "updated_at": "2026-11-20T15:39:56.862Z",
+    "main_image": "neti-demo/weather-station.png",
+    "project": "fb083706-fcf2-4927-9c21-300bb202f468"
+  }
+}
+]
