@@ -1,5 +1,7 @@
 __all__ = ()
 from django.contrib.auth import login as auth_login
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 
@@ -10,8 +12,17 @@ def registration(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('authentication:login')
+            try:
+                with transaction.atomic():
+                    form.save()
+            except (IntegrityError, ValidationError):
+                # Another registration may have saved the login or email.
+                form.full_clean()
+                if not form.errors:
+                    raise
+            else:
+                return redirect('authentication:login')
+        form.fields['username'].widget.attrs.pop('autofocus', None)
     else:
         form = UserRegisterForm()
     template = 'auth/auth.html'

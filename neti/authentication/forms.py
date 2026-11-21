@@ -1,29 +1,40 @@
 __all__ = ()
 from django import forms
 from django.contrib.auth import authenticate
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UsernameField
 
 from user.models import User
 
 
 class UserRegisterForm(UserCreationForm):
-
-    email = forms.EmailField(label='Email')
+    username = UsernameField(
+        label='Имя пользователя',
+        max_length=150,
+        help_text='До 150 символов.',
+        error_messages={'unique': 'Это имя пользователя уже занято.'},
+    )
 
     class Meta(UserCreationForm.Meta):
         model = User
         fields = UserCreationForm.Meta.fields + ('email',)
+        labels = {'email': 'Email'}
+        widgets = {'email': forms.EmailInput(attrs={'autocomplete': 'email'})}
 
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault('label_suffix', '')
         super().__init__(*args, **kwargs)
 
         for field in self.fields.values():
-            field.widget.attrs.update(
-                {
-                    'class': 'form-control',
-                    'placeholder': field.label,
-                },
+            field.widget.attrs['class'] = 'form-control'
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'Этот адрес электронной почты уже используется.',
+                code='unique',
             )
+        return email
 
 
 class UserAuthorizationForm(forms.Form):
@@ -32,7 +43,7 @@ class UserAuthorizationForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 'class': 'form-control',
-                'placeholder': 'Введите логин или email',
+                'autocomplete': 'username',
             },
         ),
     )
@@ -42,12 +53,13 @@ class UserAuthorizationForm(forms.Form):
         widget=forms.PasswordInput(
             attrs={
                 'class': 'form-control',
-                'placeholder': 'Введите пароль',
+                'autocomplete': 'current-password',
             },
         ),
     )
 
     def __init__(self, *args, request=None, **kwargs):
+        kwargs.setdefault('label_suffix', '')
         super().__init__(*args, **kwargs)
         self.request = request
 

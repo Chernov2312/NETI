@@ -15,6 +15,7 @@ from project.forms import MAX_DOCUMENT_SIZE, MAX_IMAGE_SIZE
 from project.models import (
     Image,
     MainImage,
+    Opportunity,
     Project,
     ProjectReport,
     Rating,
@@ -101,6 +102,99 @@ class ProjectTests(TestCase):
         response = self.client.get(url, {'tag': 'missing'})
         self.assertEqual(response.status_code, 404)
 
+    def test_opportunity_marketplace_submission_and_contact(self):
+        url = reverse('project:opportunity_list')
+        create_url = reverse('project:opportunity_create')
+        response = self.client.get(url)
+        self.assertContains(response, 'Биржа заданий')
+        self.assertNotContains(response, create_url)
+
+        self.client.force_login(self.owner)
+        self.assertEqual(self.client.get(create_url).status_code, 403)
+        self.assertEqual(
+            self.client.post(
+                create_url,
+                {'title': 'Запретное задание', 'organization': 'Вуз'},
+            ).status_code,
+            403,
+        )
+        self.assertFalse(Opportunity.objects.exists())
+
+        university = User.objects.create_user(
+            'university', 'lab@example.test', role='university',
+        )
+        self.client.force_login(university)
+        response = self.client.post(
+            create_url,
+            {
+                'title': 'Система мониторинга воздуха',
+                'kind': Opportunity.Kind.BRIEF,
+                'organization': 'Институт экологии НГТУ',
+                'description': 'Создать прототип датчика и описать испытания.',
+                'contact_email': 'lab@example.test',
+                'deadline': '2027-04-30',
+            },
+        )
+        opportunity = Opportunity.objects.get()
+        self.assertRedirects(
+            response,
+            reverse('project:opportunity_detail', args=[opportunity.pk]),
+        )
+        self.assertEqual(opportunity.author, university)
+        self.assertContains(self.client.get(url), opportunity.title)
+        detail_url = reverse(
+            'project:opportunity_detail', args=[opportunity.pk],
+        )
+        detail = self.client.get(detail_url)
+        self.assertContains(detail, opportunity.description)
+        self.assertContains(detail, 'mailto:lab@example.test')
+        self.assertContains(detail, 'Снять задание с биржи')
+
+        self.client.force_login(self.reader)
+        self.assertEqual(
+            self.client.post(
+                reverse('project:opportunity_delete', args=[opportunity.pk]),
+            ).status_code,
+            403,
+        )
+        self.client.force_login(university)
+        self.assertRedirects(
+            self.client.post(
+                reverse('project:opportunity_delete', args=[opportunity.pk]),
+            ),
+            url,
+        )
+        self.assertFalse(Opportunity.objects.exists())
+
+    def test_project_pages_handle_missing_image_files(self):
+        cover = MainImage.objects.create(
+            project=self.project,
+            main_image='missing/cover.png',
+        )
+        photo = Image.objects.create(
+            project=self.project,
+            image='missing/photo.png',
+        )
+
+        with self.assertNoLogs('sorl.thumbnail', level='WARNING'):
+            catalog = self.client.get(reverse('project:project_list'))
+            home = self.client.get(reverse('home:home'))
+            detail = self.client.get(self.detail_url)
+
+        self.assertContains(catalog, 'Нет изображения')
+        self.assertContains(home, 'project-cover-placeholder')
+        self.assertNotContains(catalog, 'src="/media/cache/')
+        self.assertNotContains(home, 'src="/media/cache/')
+        self.assertNotContains(detail, cover.main_image.url)
+        self.assertNotContains(detail, photo.image.url)
+        self.assertNotContains(detail, 'Галерея')
+
+        cover.main_image.storage.save(cover.main_image.name, self.png())
+        for url_name in ('project:project_list', 'home:home'):
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+                self.assertContains(response, 'src="/media/cache/')
+
     def test_catalog_search_matches_part_of_title_with_selected_tag(self):
         station = Project.objects.create(
             name='Arduino: датчик 100%',
@@ -137,6 +231,12 @@ class ProjectTests(TestCase):
                 self.assertEqual(list(response.context['projects']), [])
         response = self.client.get(url, {'q': 'Несуществующий проект'})
         self.assertContains(response, 'Проекты не найдены.')
+        self.assertContains(
+            response,
+            f'<a class="site-text-link" href="{url}">Сбросить фильтры '
+            '<span aria-hidden="true">→</span></a>',
+            html=True,
+        )
 
     def test_catalog_pagination_keeps_filters_and_stable_order(self):
         items = Project.objects.bulk_create(
@@ -273,13 +373,30 @@ class ProjectTests(TestCase):
         self.assertCountEqual(project.tags.all(), [self.tag, other_tag])
         self.assertTrue(project.document.storage.exists(project.document.name))
         document_url = self.project_url('project_document', project)
+        self.client.logout()
         response = self.client.get(document_url)
-        self.assertIn('attachment', response['Content-Disposition'])
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertEqual(
+            response['Content-Disposition'], 'inline; filename="document.pdf"',
+        )
         self.assertEqual(
             b''.join(response.streaming_content),
             self.pdf().read(),
         )
+        head = self.client.head(document_url)
+        self.assertEqual(head['Content-Type'], 'application/pdf')
+        self.assertEqual(
+            head['Content-Disposition'], response['Content-Disposition'],
+        )
+        self.assertEqual(b''.join(head.streaming_content), b'')
+
+        download = self.client.get(document_url, {'download': '1'})
+        self.assertIn('attachment', download['Content-Disposition'])
+        self.assertEqual(
+            b''.join(download.streaming_content), self.pdf().read(),
+        )
         detail = self.client.get(self.project_url('project_detail', project))
+        self.assertContains(detail, 'Открыть PDF')
         self.assertContains(detail, project.main_image.main_image.url)
         self.assertContains(detail, 'Галерея')
         self.assertEqual(project.images.count(), 2)
@@ -288,6 +405,26 @@ class ProjectTests(TestCase):
             self.assertContains(detail, image.image.url)
         catalog = self.client.get(reverse('project:project_list'))
         self.assertContains(catalog, '/media/cache/')
+
+    def test_legacy_documents_are_downloaded_as_attachments(self):
+        url = self.project_url('project_document')
+        for name, content in (
+            ('old-document.docx', b'old document'),
+            ('invalid.pdf', b'<html>not a PDF</html>'),
+        ):
+            with self.subTest(name=name):
+                upload = SimpleUploadedFile(name, content)
+                self.project.document.save(name, upload)
+                response = self.client.get(url)
+                self.assertEqual(
+                    response['Content-Type'], 'application/octet-stream',
+                )
+                self.assertIn('attachment', response['Content-Disposition'])
+                self.assertEqual(b''.join(response.streaming_content), content)
+
+    def test_missing_project_document_returns_not_found(self):
+        response = self.client.get(self.project_url('project_document'))
+        self.assertEqual(response.status_code, 404)
 
     def test_create_rejects_missing_or_invalid_document(self):
         self.client.force_login(self.owner)

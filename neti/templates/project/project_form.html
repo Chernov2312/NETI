@@ -1,22 +1,40 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }} — NETI{% endblock %}
+{% block title %}{{ title }} — NETI{% endblock title %}
 
 {% block maincontent %}
-<div class="container py-5">
-  <h1 class="h2 mb-4">{{ title }}</h1>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% if is_edit and form.instance.document %}
-      <p><a href="{% url 'project:project_document' form.instance.pk %}">Скачать текущий документ</a></p>
-    {% endif %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-    {% if is_edit %}
-      <a href="{% url 'project:project_detail' form.instance.pk %}" class="btn btn-outline-secondary">Отмена</a>
-    {% else %}
-      <a href="{% url 'user:projects' %}" class="btn btn-outline-secondary">Отмена</a>
-    {% endif %}
-  </form>
-</div>
-{% endblock %}
+  <header class="page-banner page-banner-with-panel">
+    <div class="container content-narrow">
+      {% if is_edit %}
+        <a class="site-back-link" href="{% url 'project:project_detail' form.instance.pk %}"><span aria-hidden="true">←</span> К проекту</a>
+      {% else %}
+        <a class="site-back-link" href="{% url 'user:projects' %}"><span aria-hidden="true">←</span> Мои проекты</a>
+      {% endif %}
+      <div class="page-heading"><h1>{{ title }}</h1></div>
+    </div>
+  </header>
+  <div class="container content-narrow raised-content">
+    <form method="post" enctype="multipart/form-data" class="site-panel panel-padding site-form">
+      {% csrf_token %}
+      {% if is_edit and form.instance.document %}
+        {% url 'project:project_document' form.instance.pk as document_url %}
+        {% if form.instance.document_is_pdf %}
+          <a class="site-text-link" href="{{ document_url }}" target="_blank" rel="noopener">
+            Открыть текущий PDF <span class="visually-hidden">в новой вкладке</span>
+          </a>
+        {% else %}
+          <a class="site-text-link" href="{{ document_url }}?download=1">Скачать текущий документ <span aria-hidden="true">↓</span></a>
+        {% endif %}
+      {% endif %}
+      {% include "includes/form_fields.html" %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        {% if is_edit %}
+          <a href="{% url 'project:project_detail' form.instance.pk %}" class="btn btn-outline-secondary">Отмена</a>
+        {% else %}
+          <a href="{% url 'user:projects' %}" class="btn btn-outline-secondary">Отмена</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+{% endblock maincontent %}

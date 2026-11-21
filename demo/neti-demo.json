@@ -42,6 +42,48 @@
   }
 },
 {
+  "model": "user.user",
+  "pk": "c8a8a035-d173-4b82-b1dd-c48bc682b10d",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$hhYdnioUQ0jEguDZBU8drC$TTJyerLdgnoVjASdpjzpfvqbJxIFSNMt0NhD3KmOukc=",
+    "last_login": null,
+    "is_superuser": false,
+    "first_name": "Мария",
+    "last_name": "Соколова",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-11-21T03:30:00Z",
+    "created_at": "2026-11-21T03:30:00Z",
+    "updated_at": "2026-11-21T03:30:00Z",
+    "username": "demo_university",
+    "email": "demo.university@example.test",
+    "role": "university",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "user.user",
+  "pk": "911e2d9e-c969-48c6-84b8-4369806fa274",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$GzjA7yr49icnyrvxOx43ow$DtiVh1vPoAeQKj+nOY4pJuBzMpXsRi7VjiNHH32OaIA=",
+    "last_login": null,
+    "is_superuser": false,
+    "first_name": "Алексей",
+    "last_name": "Волков",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-11-21T03:30:00Z",
+    "created_at": "2026-11-21T03:30:00Z",
+    "updated_at": "2026-11-21T03:30:00Z",
+    "username": "demo_university2",
+    "email": "demo.university2@example.test",
+    "role": "university",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
   "model": "project.tag",
   "pk": "29ffb472-e7d3-4680-bf10-40982fe2a0fa",
   "fields": {
@@ -142,6 +184,51 @@
     "updated_at": "2026-11-20T15:39:56.862Z",
     "main_image": "neti-demo/weather-station.png",
     "project": "fb083706-fcf2-4927-9c21-300bb202f468"
+  }
+},
+{
+  "model": "project.opportunity",
+  "pk": "d711101a-8a03-4f6c-a3d2-c8cb7a3eb2cb",
+  "fields": {
+    "created_at": "2026-11-21T03:35:00Z",
+    "updated_at": "2026-11-21T03:35:00Z",
+    "title": "Датчик качества воздуха для учебных аудиторий",
+    "kind": "brief",
+    "organization": "Институт экологии НГТУ",
+    "description": "Разработать доступный прототип датчика углекислого газа и температуры для учебных аудиторий. Нужны схема подключения, корпус для 3D-печати и небольшая программа, которая показывает показания. В итоговом описании приложить результаты испытаний в двух помещениях.",
+    "contact_email": "demo.university@example.test",
+    "deadline": "2027-04-30",
+    "author": "c8a8a035-d173-4b82-b1dd-c48bc682b10d"
+  }
+},
+{
+  "model": "project.opportunity",
+  "pk": "9c330a35-3a7f-494f-a7c6-82f3cc0c128c",
+  "fields": {
+    "created_at": "2026-11-21T03:36:00Z",
+    "updated_at": "2026-11-21T03:36:00Z",
+    "title": "Карта тихих мест кампуса",
+    "kind": "idea",
+    "organization": "Центр студенческих инициатив НГТУ",
+    "description": "Идея сервиса, который помогает найти в корпусах места для спокойной самостоятельной работы. Предложите формат карты, продумайте способ собирать данные о доступности мест и создайте кликабельный макет страницы.",
+    "contact_email": "demo.university2@example.test",
+    "deadline": "2027-05-31",
+    "author": "911e2d9e-c969-48c6-84b8-4369806fa274"
+  }
+},
+{
+  "model": "project.opportunity",
+  "pk": "7d3c8220-3b33-4e91-a9a7-d802a78a3344",
+  "fields": {
+    "created_at": "2026-11-21T03:37:00Z",
+    "updated_at": "2026-11-21T03:37:00Z",
+    "title": "Панель для наблюдений за городскими деревьями",
+    "kind": "brief",
+    "organization": "Лаборатория городских исследований НГТУ",
+    "description": "Создать веб-прототип каталога деревьев на территории кампуса. Для карточки дерева нужны координаты, вид, фотография и заметки о состоянии. Включите фильтр по видам и карту с расположением точек.",
+    "contact_email": "demo.university@example.test",
+    "deadline": "2027-06-15",
+    "author": "c8a8a035-d173-4b82-b1dd-c48bc682b10d"
   }
 }
 ]

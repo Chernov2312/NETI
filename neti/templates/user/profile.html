@@ -1,30 +1,34 @@
 {% extends "base.html" %}
 
-{% block title %}Профиль — NETI{% endblock %}
+{% block title %}Профиль — NETI{% endblock title %}
 
 {% block maincontent %}
-<div class="container py-5">
-  <div class="card shadow-sm mx-auto" style="max-width: 36rem">
-    <div class="card-body p-4">
-      <h1 class="h3 mb-3">{{ profile_user.username }}</h1>
-      <dl class="row">
-        <dt class="col-sm-4">Email</dt>
-        <dd class="col-sm-8">{{ profile_user.email }}</dd>
-        {% with full_name=profile_user.get_full_name %}
-          {% if full_name %}
-            <dt class="col-sm-4">Имя</dt>
-            <dd class="col-sm-8">{{ full_name }}</dd>
-          {% endif %}
-        {% endwith %}
-        <dt class="col-sm-4">Роль</dt>
-        <dd class="col-sm-8">{{ profile_user.get_role_display }}</dd>
-        <dt class="col-sm-4">Создано проектов</dt>
-        <dd class="col-sm-8">{{ profile_user.projects.count }}</dd>
-        <dt class="col-sm-4">Выставлено оценок</dt>
-        <dd class="col-sm-8">{{ profile_user.ratings.count }}</dd>
-      </dl>
-      <a href="{% url 'user:projects' %}" class="btn btn-primary">Мои проекты</a>
+  <header class="page-banner page-banner-with-panel">
+    <div class="container content-narrow page-heading">
+      <div class="profile-identity">
+        <span class="profile-mark" aria-hidden="true">{{ profile_user.username|first|upper }}</span>
+        <div>
+          <p class="profile-label">Профиль</p>
+          <h1>{{ profile_user.username }}</h1>
+        </div>
+      </div>
     </div>
+  </header>
+  <div class="container content-narrow raised-content profile-content">
+    <section class="site-panel panel-padding" aria-labelledby="profile-details-heading">
+      <h2 id="profile-details-heading" class="panel-heading">Учётная запись</h2>
+      <dl class="profile-details">
+        <div><dt>Email</dt><dd>{{ profile_user.email }}</dd></div>
+        {% with full_name=profile_user.get_full_name %}
+          {% if full_name %}<div><dt>Имя</dt><dd>{{ full_name }}</dd></div>{% endif %}
+        {% endwith %}
+        <div><dt>Роль</dt><dd>{{ profile_user.get_role_display }}</dd></div>
+      </dl>
+      <a href="{% url 'user:projects' %}" class="btn btn-primary">Мои проекты <span aria-hidden="true">→</span></a>
+    </section>
+    <dl class="profile-stats">
+      <div class="site-panel panel-padding"><dt>Создано проектов</dt><dd>{{ profile_user.projects.count }}</dd></div>
+      <div class="site-panel panel-padding"><dt>Выставлено оценок</dt><dd>{{ profile_user.ratings.count }}</dd></div>
+    </dl>
   </div>
-</div>
-{% endblock %}
+{% endblock maincontent %}

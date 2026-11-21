@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block maincontent %}
+  <div class="container account-content">
+    <div class="site-panel account-layout">
+      <div class="account-visual"><span>Проекты Лицея НГТУ</span></div>
+      <div class="account-panel">
+        {% block account_content %}{% endblock account_content %}
+      </div>
+    </div>
+  </div>
+{% endblock maincontent %}

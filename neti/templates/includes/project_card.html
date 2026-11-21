@@ -1,47 +1,55 @@
-<div class="card h-100 shadow-sm border border-light-subtle rounded-3 bg-white position-relative transition-hover">
-    <div class="position-relative overflow-hidden border-bottom" style="height: 200px; border-top-left-radius: calc(0.375rem - 1px); border-top-right-radius: calc(0.375rem - 1px);">
-        {% with thumbnail=project.main_image.get_image_300x300 %}
-            {% if thumbnail %}
-                <img src="{{ thumbnail }}" class="w-100 h-100 object-fit-cover" alt="{{ project.name }}" loading="lazy">
+<article class="card project-card">
+  <div class="project-cover">
+    {% with cover=project.main_image.get_wide_thumbnail %}
+      {% if cover %}
+        <img src="{{ cover.url }}" alt="" loading="lazy" width="{{ cover.width }}" height="{{ cover.height }}">
+      {% else %}
+        <div class="project-cover-placeholder">
+          <span class="project-cover-mark" aria-hidden="true"></span>
+          {% if not compact %}<span class="project-cover-label">Нет изображения</span>{% endif %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% if project.average_rating is not None %}
+      <span class="project-rating">
+        <span class="visually-hidden">Средняя оценка</span>
+        <span aria-hidden="true">★</span> {{ project.average_rating|floatformat:1 }}
+      </span>
+    {% endif %}
+  </div>
+  <div class="project-card-content">
+    {% if compact %}
+      <h3 class="project-card-title">
+        <a href="{% url 'project:project_detail' project.id %}">
+          {{ project.name }} <span class="project-link-arrow" aria-hidden="true">→</span>
+        </a>
+      </h3>
+    {% else %}
+      <h2 class="project-card-title">{{ project.name }}</h2>
+    {% endif %}
+    <p class="project-author">@{{ project.user.username }}</p>
+    {% if project.description %}
+      <p class="project-summary">{{ project.description|truncatechars:140 }}</p>
+    {% endif %}
+    {% if project.tags.all %}
+      <ul class="tag-list">
+        {% for tag in project.tags.all %}
+          <li>
+            {% if compact %}
+              <a href="{% url 'project:project_list' %}?tag={{ tag.slug|urlencode }}">{{ tag.name }}</a>
             {% else %}
-                <div class="bg-light text-secondary d-flex h-100 align-items-center justify-content-center">Нет изображения</div>
+              <a href="{% url 'project:project_list' %}{% querystring tag=tag.slug page=None %}">#{{ tag.name }}</a>
             {% endif %}
-        {% endwith %}
-        
-        <div class="position-absolute top-0 end-0 m-2 bg-dark bg-opacity-75 text-warning px-2 py-1 rounded small fw-bold shadow-sm">
-            {% if project.average_rating is not None %}★ {{ project.average_rating|floatformat:1 }}{% else %}Нет оценок{% endif %}
-        </div>
-    </div>
-
-    <div class="card-body d-flex flex-column p-4">
-        
-        <div class="text-muted small mb-2 d-flex align-items-center gap-1">
-            <span class="text-primary-emphasis fw-medium">@{{ project.user.username }}</span>
-        </div>
-
-        <h5 class="card-title fw-bold text-dark mb-2 text-truncate" title="{{ project.name }}">
-            {{ project.name }}
-        </h5>
-
-        <p class="card-text text-muted small mb-4 flex-grow-1">
-            {{ project.description|default:"Описание отсутствует."|truncatechars:120 }}
-        </p>
-
-        <div class="mb-3 d-flex flex-wrap gap-1">
-            {% for tag in project.tags.all %}
-                <a class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none rounded-pill"
-                   href="{% url 'project:project_list' %}{% querystring tag=tag.slug page=None %}">#{{ tag.name }}</a>
-            {% empty %}
-                <span class="text-muted small-8" style="font-size: 0.75rem;">Без тегов</span>
-            {% endfor %}
-        </div>
-
-        <div class="mt-auto border-top pt-3 border-light-subtle">
-            <a href="{% url 'project:project_detail' project.id %}" class="btn btn-primary btn-sm w-100 rounded-pill fw-medium py-2">
-                Открыть проект
-            </a>
-        </div>
-
-    </div>
-</div>
-
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% if not compact %}
+      <div class="project-card-action">
+        <a href="{% url 'project:project_detail' project.id %}" class="site-text-link">
+          Открыть проект <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</article>

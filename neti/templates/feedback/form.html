@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Обратная связь — NETI{% endblock %}
+{% block title %}Обратная связь — NETI{% endblock title %}
 
 {% block maincontent %}
-<div class="container py-5">
-  <div class="mx-auto col-md-8 col-lg-6">
-    <h1 class="h2 mb-4">Обратная связь</h1>
-    {% for message in messages %}
-      <p class="alert alert-success" role="status">{{ message }}</p>
-    {% endfor %}
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary">Отправить обращение</button>
-    </form>
+  <header class="page-banner page-banner-with-panel">
+    <div class="container content-narrow page-heading"><h1>Обратная связь</h1></div>
+  </header>
+  <div class="container content-narrow raised-content">
+    <div class="site-panel panel-padding">
+      {% for message in messages %}
+        <p class="alert alert-success" role="status">{{ message }}</p>
+      {% endfor %}
+      <form method="post" class="site-form">
+        {% csrf_token %}
+        {% include "includes/form_fields.html" %}
+        <div class="form-actions"><button type="submit" class="btn btn-primary">Отправить обращение</button></div>
+      </form>
+    </div>
   </div>
-</div>
-{% endblock %}
+{% endblock maincontent %}

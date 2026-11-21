@@ -63,10 +63,26 @@ class ImageBaseModel(models.Model):
     get_image_tmb.short_description = 'Миниатюра'
 
     def get_from_model(self, geometry_string, **options):
-        if hasattr(self, 'image') and self.image:
-            return get_thumbnail(self.image, geometry_string, **options)
+        source = self._available_image()
+        if source is None:
+            return None
 
-        if hasattr(self, 'main_image') and self.main_image:
-            return get_thumbnail(self.main_image, geometry_string, **options)
+        try:
+            thumbnail = get_thumbnail(source, geometry_string, **options)
+        except FileNotFoundError:
+            return None
+        return thumbnail if thumbnail and thumbnail.exists() else None
 
+    def get_image_url(self):
+        source = self._available_image()
+        return source.url if source else None
+
+    def _available_image(self):
+        source = getattr(self, 'image', None) or getattr(
+            self,
+            'main_image',
+            None,
+        )
+        if source and source.storage.exists(source.name):
+            return source
         return None

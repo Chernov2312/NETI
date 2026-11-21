@@ -11,7 +11,13 @@ class UserManager(BaseUserManager):
         return self._base_queryset().filter(username=username).first()
 
     def get_by_email(self, email: str):
-        return self._base_queryset().filter(email=email).first()
+        queryset = self._base_queryset()
+        exact_match = queryset.filter(email=email).first()
+        if exact_match is not None:
+            return exact_match
+
+        matches = list(queryset.filter(email__iexact=email)[:2])
+        return matches[0] if len(matches) == 1 else None
 
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:

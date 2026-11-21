@@ -1,5 +1,55 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% block title %}NETI — проекты Лицея НГТУ{% endblock title %}
+
+{% block head %}
+  <meta name="description" content="Каталог ученических проектов Лицея НГТУ. Знакомьтесь с работами лицеистов и делитесь своими проектами.">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock head %}
+
 {% block maincontent %}
-	<p>Что-то</p>
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="container home-hero-inner">
+      <div class="home-hero-copy">
+        <p class="home-school">Проекты Лицея НГТУ</p>
+        <h1 id="home-title">Идеи <span>в деле.</span></h1>
+        <p class="home-intro">Знакомьтесь с работами лицеистов, оценивайте проекты и делитесь своими идеями.</p>
+        <div class="home-actions">
+          <a class="home-button home-button-primary" href="{% url 'project:project_list' %}">
+            Смотреть проекты <span aria-hidden="true">→</span>
+          </a>
+          {% if user.is_authenticated %}
+            <a class="home-button home-button-secondary" href="{% url 'project:project_create' %}">Добавить проект</a>
+          {% else %}
+            <a class="home-button home-button-secondary" href="{% url 'authentication:registration' %}">Создать аккаунт</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="home-hero-visual">
+        <img src="{% static 'img/home-workshop.webp' %}" width="1120" height="1120" alt="" fetchpriority="high">
+      </div>
+    </div>
+  </section>
+
+  <section class="container home-projects" aria-labelledby="recent-projects-heading">
+    <div class="home-section-heading">
+      <h2 id="recent-projects-heading">Свежие проекты</h2>
+      <a class="site-text-link" href="{% url 'project:project_list' %}">Весь каталог <span aria-hidden="true">→</span></a>
+    </div>
+    {% if recent_projects %}
+      <div class="project-grid">
+        {% for project in recent_projects %}
+          {% include "includes/project_card.html" with compact=True %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-panel">
+        <p>В каталоге пока нет проектов.</p>
+        {% if user.is_authenticated %}
+          <a class="site-text-link" href="{% url 'project:project_create' %}">Опубликовать первый проект <span aria-hidden="true">→</span></a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
 {% endblock maincontent %}

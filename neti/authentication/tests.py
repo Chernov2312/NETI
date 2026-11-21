@@ -1,5 +1,6 @@
 __all__ = ()
 
+from unittest.mock import patch
 from urllib.parse import urlsplit
 
 from django.contrib.auth import SESSION_KEY
@@ -7,6 +8,7 @@ from django.core import mail
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from authentication.forms import UserRegisterForm
 from user.models import User
 
 
@@ -26,7 +28,7 @@ class AuthenticationTests(TestCase):
         url = reverse('authentication:registration')
         data = {
             'username': 'new-student',
-            'email': 'new-student@example.test',
+            'email': 'New-Student@Example.Test',
             'password1': self.password,
             'password2': self.password,
             'role': 'moderator',
@@ -36,15 +38,103 @@ class AuthenticationTests(TestCase):
         user = User.objects.get(username=data['username'])
         self.assertTrue(user.check_password(self.password))
         self.assertEqual(user.role, 'student')
+        self.assertEqual(user.email, 'new-student@example.test')
 
         response = self.client.post(url, {**data, 'username': 'other-student'})
-        self.assertIn('email', response.context['form'].errors)
+        self.assertFormError(
+            response.context['form'],
+            'email',
+            'Этот адрес электронной почты уже используется.',
+        )
         self.assertFalse(
             User.objects.filter(username='other-student').exists(),
         )
 
+    def test_registration_displays_localized_errors_without_passwords(self):
+        response = self.client.post(
+            reverse('authentication:registration'),
+            {
+                'username': 'STUDENT',
+                'email': self.user.email.upper(),
+                'password1': self.password,
+                'password2': 'Different-passphrase#31',
+            },
+        )
+        form = response.context['form']
+        self.assertFormError(
+            form,
+            'username',
+            'Это имя пользователя уже занято.',
+        )
+        self.assertFormError(
+            form,
+            'email',
+            'Этот адрес электронной почты уже используется.',
+        )
+        self.assertIn('password2', form.errors)
+        self.assertContains(response, 'Исправьте отмеченные поля')
+        self.assertContains(response, 'aria-invalid="true"', count=3)
+        self.assertNotContains(response, self.password)
+        self.assertNotContains(response, 'Different-passphrase#31')
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_registration_rejects_overlong_username(self):
+        response = self.client.post(
+            reverse('authentication:registration'),
+            {
+                'username': 'a' * 151,
+                'email': 'another@example.test',
+                'password1': self.password,
+                'password2': self.password,
+            },
+        )
+        errors = response.context['form'].errors.as_data()
+        self.assertEqual(errors['username'][0].code, 'max_length')
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_registration_handles_email_taken_before_save(self):
+        original_validation = UserRegisterForm.is_valid
+        email = 'race@example.test'
+
+        def validate_before_other_registration(form):
+            valid = original_validation(form)
+            if valid:
+                User.objects.create_user('other-registration', email)
+            return valid
+
+        with patch.object(
+            UserRegisterForm,
+            'is_valid',
+            validate_before_other_registration,
+        ):
+            response = self.client.post(
+                reverse('authentication:registration'),
+                {
+                    'username': 'late-registration',
+                    'email': email.upper(),
+                    'password1': self.password,
+                    'password2': self.password,
+                },
+            )
+
+        self.assertFormError(
+            response.context['form'],
+            'email',
+            'Этот адрес электронной почты уже используется.',
+        )
+        self.assertEqual(
+            User.objects.get(email=email).username, 'other-registration',
+        )
+        self.assertFalse(
+            User.objects.filter(username='late-registration').exists(),
+        )
+
     def test_login_by_username_or_email(self):
-        for identifier in (self.user.username, self.user.email):
+        for identifier in (
+            self.user.username,
+            self.user.email,
+            self.user.email.upper(),
+        ):
             with self.subTest(identifier=identifier):
                 self.client.logout()
                 response = self.client.post(
@@ -56,6 +146,23 @@ class AuthenticationTests(TestCase):
                     self.client.session[SESSION_KEY],
                     str(self.user.pk),
                 )
+
+    def test_login_uses_exact_email_for_legacy_case_duplicates(self):
+        legacy = User.objects.create_user(
+            'legacy', 'Student@example.test', self.password,
+        )
+        url = reverse('authentication:login')
+        response = self.client.post(
+            url, {'login': 'STUDENT@example.test', 'password': self.password},
+        )
+        self.assertContains(response, 'Неверный логин или пароль.')
+        self.assertNotIn(SESSION_KEY, self.client.session)
+
+        response = self.client.post(
+            url, {'login': legacy.email, 'password': self.password},
+        )
+        self.assertRedirects(response, reverse('project:project_list'))
+        self.assertEqual(self.client.session[SESSION_KEY], str(legacy.pk))
 
     def test_login_rejects_wrong_credentials_and_inactive_user(self):
         url = reverse('authentication:login')

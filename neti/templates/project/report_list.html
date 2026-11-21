@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Жалобы на проекты — NETI{% endblock %}
+{% block title %}Жалобы на проекты — NETI{% endblock title %}
 
 {% block maincontent %}
-<div class="container py-5">
-  <h1 class="h2 mb-4">Жалобы на проекты</h1>
-  {% for report in reports %}
-    <article class="card card-body mb-3">
-      <h2 class="h5">
-        <a href="{% url 'project:project_detail' report.project_id %}">{{ report.project.name }}</a>
-      </h2>
-      <p class="small text-secondary mb-2">@{{ report.reporter.username }} · {{ report.created_at }}</p>
-      <p class="text-break">{{ report.reason|linebreaksbr }}</p>
-      <form method="post" action="{% url 'project:report_resolve' report.pk %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-primary">Отметить как рассмотренную</button>
-      </form>
-    </article>
-  {% empty %}
-    <p>Жалоб, ожидающих рассмотрения, нет.</p>
-  {% endfor %}
-</div>
-{% endblock %}
+  <header class="page-banner page-banner-with-panel">
+    <div class="container content-narrow page-heading"><h1>Жалобы на проекты</h1></div>
+  </header>
+  <div class="container content-narrow raised-content report-list">
+    {% for report in reports %}
+      <article class="site-panel panel-padding report-item">
+        <h2 class="panel-heading"><a class="site-text-link" href="{% url 'project:project_detail' report.project_id %}">{{ report.project.name }}</a></h2>
+        <p class="small text-body-secondary mb-3">@{{ report.reporter.username }} · <time datetime="{{ report.created_at|date:'c' }}">{{ report.created_at }}</time></p>
+        <p>{{ report.reason|linebreaksbr }}</p>
+        <form method="post" action="{% url 'project:report_resolve' report.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-primary">Отметить как рассмотренную</button>
+        </form>
+      </article>
+    {% empty %}
+      <div class="empty-panel"><p>Жалоб, ожидающих рассмотрения, нет.</p></div>
+    {% endfor %}
+  </div>
+{% endblock maincontent %}

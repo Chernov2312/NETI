@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ opportunity.title }} — Биржа NETI{% endblock title %}
+
+{% block maincontent %}
+  <header class="page-banner">
+    <div class="container content-narrow">
+      <a class="site-back-link" href="{% url 'project:opportunity_list' %}"><span aria-hidden="true">←</span> Биржа заданий</a>
+      <div class="page-heading"><div><p class="opportunity-kind">{{ opportunity.get_kind_display }}</p><h1>{{ opportunity.title }}</h1><p class="page-meta">{{ opportunity.organization }}</p></div></div>
+    </div>
+  </header>
+  <div class="container content-narrow standard-content opportunity-detail">
+    <section class="site-panel panel-padding">
+      <h2 class="panel-heading">Описание задания</h2>
+      <div class="opportunity-description">{{ opportunity.description|linebreaks }}</div>
+      {% if opportunity.deadline %}<p><strong>Срок выполнения</strong> {{ opportunity.deadline|date:'j E Y' }}</p>{% endif %}
+      <p><strong>Опубликовал</strong> {{ opportunity.author.username }}</p>
+      <a class="btn btn-primary" href="mailto:{{ opportunity.contact_email }}">Связаться с заказчиком</a>
+      {% if can_manage %}
+        <form method="post" action="{% url 'project:opportunity_delete' opportunity.pk %}" class="mt-4">
+          {% csrf_token %}
+          <button class="btn btn-outline-danger" type="submit">Снять задание с биржи</button>
+        </form>
+      {% endif %}
+    </section>
+  </div>
+{% endblock maincontent %}

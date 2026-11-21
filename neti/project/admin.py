@@ -7,6 +7,7 @@ from project.inlines import ImageInline, MainImageInline
 from project.models import (
     Image,
     MainImage,
+    Opportunity,
     Project,
     ProjectReport,
     Rating,
@@ -65,6 +66,16 @@ class ProjectAdmin(admin.ModelAdmin):
     def cover_preview(self, obj):
         cover = getattr(obj, 'main_image', None)
         return cover.get_image_tmb() if cover else 'Нет изображения'
+
+
+@admin.register(Opportunity)
+class OpportunityAdmin(admin.ModelAdmin):
+    list_display = ('title', 'organization', 'kind', 'author', 'created_at')
+    list_filter = ('kind', 'created_at')
+    search_fields = (
+        'title', 'organization', 'description', 'author__username',
+    )
+    readonly_fields = ('created_at', 'updated_at')
 
 
 class ReportStatusFilter(admin.SimpleListFilter):

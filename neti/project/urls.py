@@ -7,6 +7,19 @@ from project import views
 app_name = 'project'
 
 urlpatterns = [
+    path('exchange/', views.opportunity_list, name='opportunity_list'),
+    path(
+        'exchange/create/', views.opportunity_create,
+        name='opportunity_create',
+    ),
+    path(
+        'exchange/<uuid:id>/', views.opportunity_detail,
+        name='opportunity_detail',
+    ),
+    path(
+        'exchange/<uuid:id>/delete/', views.opportunity_delete,
+        name='opportunity_delete',
+    ),
     path('', views.project_list, name='project_list'),
     path('create/', views.project_create, name='project_create'),
     path('detail/<uuid:id>/', views.project_detail, name='project_detail'),

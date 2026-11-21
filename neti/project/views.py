@@ -9,12 +9,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
 from project.forms import (
+    OpportunityForm,
     ProjectForm,
     ProjectReportForm,
     ProjectSearchForm,
     RatingForm,
 )
-from project.models import Project, ProjectReport, Rating, Tag
+from project.models import Opportunity, Project, ProjectReport, Rating, Tag
+from project.utils import has_pdf_signature
 
 PROJECTS_PER_PAGE = 12
 
@@ -51,6 +53,58 @@ def project_list(request):
     )
 
 
+def opportunity_list(request):
+    opportunities = Opportunity.objects.select_related('author')
+    return render(
+        request,
+        'project/opportunity_list.html',
+        {'opportunities': opportunities},
+    )
+
+
+@login_required
+def opportunity_create(request):
+    if request.user.role != request.user.Role.UNIVERSITY:
+        raise PermissionDenied
+    form = OpportunityForm(request.POST or None)
+    if form.is_valid():
+        opportunity = form.save(commit=False)
+        opportunity.author = request.user
+        opportunity.save()
+        return redirect('project:opportunity_detail', id=opportunity.pk)
+    return render(
+        request, 'project/opportunity_form.html',
+        {'form': form, 'title': 'Разместить предложение'},
+    )
+
+
+def opportunity_detail(request, id):
+    opportunity = get_object_or_404(
+        Opportunity.objects.select_related('author'), pk=id,
+    )
+    return render(
+        request, 'project/opportunity_detail.html',
+        {
+            'opportunity': opportunity,
+            'can_manage': request.user.is_authenticated
+            and request.user.pk == opportunity.author_id,
+        },
+    )
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def opportunity_delete(request, id):
+    opportunity = get_object_or_404(
+        Opportunity.objects.select_for_update(), pk=id,
+    )
+    if request.user.pk != opportunity.author_id:
+        raise PermissionDenied
+    opportunity.delete()
+    return redirect('project:opportunity_list')
+
+
 def project_detail(request, id):
     project = Project.objects.get_project_info(id)
     if project is None:
@@ -69,6 +123,11 @@ def render_detail(request, project, rating_form, status=200):
         'project/item_info.html',
         {
             'project': project,
+            'gallery_urls': [
+                url
+                for photo in project.images.all()
+                if (url := photo.get_image_url())
+            ],
             'rating_form': rating_form,
             'can_manage': can_manage_project(request.user, project),
         },
@@ -87,12 +146,22 @@ def project_document(request, id):
     project = get_object_or_404(Project, id=id)
     try:
         document = project.document.open('rb')
+        inline = (
+            request.GET.get('download') != '1'
+            and project.document_is_pdf
+            and has_pdf_signature(document)
+        )
     except (FileNotFoundError, ValueError) as error:
+        project.document.close()
         raise Http404 from error
+    except OSError:
+        project.document.close()
+        raise
+    content_type = 'application/pdf' if inline else 'application/octet-stream'
     return FileResponse(
         document,
-        as_attachment=True,
-        content_type='application/octet-stream',
+        as_attachment=not inline,
+        content_type=content_type,
     )
 
 

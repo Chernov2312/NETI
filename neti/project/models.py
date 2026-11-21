@@ -62,6 +62,52 @@ class Project(UpdateBaseModel, NameBaseModel):
     def __str__(self):
         return self.name
 
+    @property
+    def document_is_pdf(self):
+        return (self.document.name or '').lower().endswith('.pdf')
+
+
+class Opportunity(UpdateBaseModel, models.Model):
+    class Kind(models.TextChoices):
+        BRIEF = 'brief', _('Техническое задание')
+        IDEA = 'idea', _('Идея проекта')
+
+    title = models.CharField(max_length=160, verbose_name=_('Название'))
+    kind = models.CharField(
+        max_length=10,
+        choices=Kind.choices,
+        default=Kind.BRIEF,
+        verbose_name=_('Тип предложения'),
+    )
+    organization = models.CharField(
+        max_length=160,
+        verbose_name=_('Вуз или организация'),
+    )
+    description = models.TextField(
+        max_length=5000,
+        verbose_name=_('Описание и требования'),
+    )
+    contact_email = models.EmailField(verbose_name=_('Email для связи'))
+    deadline = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_('Срок выполнения'),
+    )
+    author = models.ForeignKey(
+        'user.User',
+        on_delete=models.CASCADE,
+        related_name='opportunities',
+        verbose_name=_('Представитель вуза'),
+    )
+
+    class Meta:
+        ordering = ('-created_at', '-id')
+        verbose_name = _('задание биржи')
+        verbose_name_plural = _('задания биржи')
+
+    def __str__(self):
+        return self.title
+
 
 class Rating(models.Model):
     project = models.ForeignKey(
@@ -154,3 +200,6 @@ class MainImage(UpdateBaseModel, ImageBaseModel):
     class Meta:
         verbose_name = _('главное изображение')
         verbose_name_plural = _('главные изображения')
+
+    def get_wide_thumbnail(self):
+        return self.get_from_model('640x320', crop='center', quality=85)

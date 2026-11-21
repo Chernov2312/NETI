@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Биржа заданий — NETI{% endblock title %}
+
+{% block maincontent %}
+  <header class="page-banner page-banner-with-panel">
+    <div class="container page-heading">
+      <div>
+        <h1>Биржа заданий</h1>
+        <p class="page-meta">Задачи и идеи от вузов для проектов лицеистов</p>
+      </div>
+      {% if user.is_authenticated and user.role == 'university' %}
+        <a class="btn btn-accent" href="{% url 'project:opportunity_create' %}">Разместить задание</a>
+      {% endif %}
+    </div>
+  </header>
+  <div class="container content-narrow raised-content report-list">
+    {% for opportunity in opportunities %}
+      <article class="site-panel panel-padding opportunity-card">
+        <p class="opportunity-kind">{{ opportunity.get_kind_display }}</p>
+        <h2 class="panel-heading"><a class="site-text-link" href="{% url 'project:opportunity_detail' opportunity.pk %}">{{ opportunity.title }}</a></h2>
+        <p class="opportunity-organization">{{ opportunity.organization }}</p>
+        <p>{{ opportunity.description|truncatechars:260 }}</p>
+        {% if opportunity.deadline %}<p class="opportunity-date">Срок: {{ opportunity.deadline|date:'j E Y' }}</p>{% endif %}
+        <a class="site-text-link" href="{% url 'project:opportunity_detail' opportunity.pk %}">Подробнее <span aria-hidden="true">→</span></a>
+      </article>
+    {% empty %}
+      <div class="empty-panel"><p>Пока нет открытых заданий. Представители вузов могут разместить первое.</p></div>
+    {% endfor %}
+  </div>
+{% endblock maincontent %}

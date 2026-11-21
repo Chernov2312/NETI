@@ -1,84 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }} — NETI{% endblock %}
+{% block title %}{{ title }} — NETI{% endblock title %}
 
 {% block maincontent %}
-<div class="container py-5">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <h1 class="h2 fw-bold text-dark mb-0">{{ title }}</h1>
-        {% if user.is_authenticated %}
-            <a href="{% url 'project:project_create' %}" class="btn btn-primary">Создать проект</a>
-        {% endif %}
+  <header class="page-banner {% if search_form %}page-banner-with-panel{% endif %}">
+    <div class="container page-heading">
+      <h1>{{ title }}</h1>
+      {% if user.is_authenticated %}
+        <a href="{% url 'project:project_create' %}" class="btn btn-accent">
+          <span aria-hidden="true">+</span> Создать проект
+        </a>
+      {% endif %}
     </div>
+  </header>
 
+  <div class="container catalog-content">
     {% if search_form %}
-        <form method="get" action="{% url 'project:project_list' %}" role="search" class="mb-4">
-            {% if selected_tag %}
-                <input type="hidden" name="tag" value="{{ selected_tag.slug }}">
-            {% endif %}
-            <label for="{{ search_form.q.id_for_label }}" class="form-label">{{ search_form.q.label }}</label>
-            <div class="input-group">
-                {{ search_form.q }}
-                <button type="submit" class="btn btn-primary">Найти</button>
-            </div>
-            {{ search_form.q.errors }}
+      <div class="site-panel catalog-tools">
+        <form method="get" action="{% url 'project:project_list' %}" role="search">
+          {% if selected_tag %}
+            <input type="hidden" name="tag" value="{{ selected_tag.slug }}">
+          {% endif %}
+          <label for="{{ search_form.q.id_for_label }}" class="form-label">{{ search_form.q.label }}</label>
+          <div class="input-group catalog-search">
+            {{ search_form.q }}
+            <button type="submit" class="btn btn-primary">Найти</button>
+          </div>
+          {{ search_form.q.errors }}
         </form>
+        {% if tags %}
+          <nav class="catalog-filters" aria-label="Фильтр по тегам">
+            <a href="{% url 'project:project_list' %}{% querystring tag=None page=None %}"
+               {% if not selected_tag %}aria-current="true"{% endif %}>Все теги</a>
+            {% for tag in tags %}
+              <a href="{% url 'project:project_list' %}{% querystring tag=tag.slug page=None %}"
+                 {% if selected_tag == tag %}aria-current="true"{% endif %}>{{ tag.name }}</a>
+            {% endfor %}
+          </nav>
+        {% endif %}
+      </div>
     {% endif %}
 
-    {% if tags %}
-        <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Фильтр по тегам">
-            <a href="{% url 'project:project_list' %}{% querystring tag=None page=None %}"
-               class="btn btn-sm {% if selected_tag %}btn-outline-secondary{% else %}btn-secondary{% endif %}">Все теги</a>
-            {% for tag in tags %}
-                <a href="{% url 'project:project_list' %}{% querystring tag=tag.slug page=None %}"
-                   class="btn btn-sm {% if selected_tag == tag %}btn-secondary{% else %}btn-outline-secondary{% endif %}">{{ tag.name }}</a>
-            {% endfor %}
-        </nav>
-    {% endif %}
-    
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% if projects %}
+      {% if page_obj.paginator.num_pages > 1 %}
+        <p class="catalog-count">Показано {{ page_obj.start_index }}–{{ page_obj.end_index }} из {{ page_obj.paginator.count }}</p>
+      {% endif %}
+      <div class="project-grid">
         {% for project in projects %}
-            <div class="col">
-                {% include "includes/project_card.html" %}
-            </div>
-        {% empty %}
-            <div class="col-12 text-center py-5">
-                <p class="text-muted">
-                    {% if search_form.q.value or selected_tag %}
-                        Проекты не найдены.
-                    {% else %}
-                        Проекты пока не созданы.
-                    {% endif %}
-                </p>
-            </div>
+          {% include "includes/project_card.html" %}
         {% endfor %}
-    </div>
-    {% if page_obj.paginator.num_pages > 1 %}
-        <nav class="mt-4" aria-label="Страницы каталога">
-            <ul class="pagination flex-wrap justify-content-center">
-                {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" rel="prev" href="{% querystring page=page_obj.previous_page_number %}">Назад</a>
-                    </li>
-                {% endif %}
-                {% for number in page_range %}
-                    {% if number == page_obj.number %}
-                        <li class="page-item active">
-                            <span class="page-link" aria-current="page">{{ number }}</span>
-                        </li>
-                    {% elif number == page_obj.paginator.ELLIPSIS %}
-                        <li class="page-item disabled"><span class="page-link">{{ number }}</span></li>
-                    {% else %}
-                        <li class="page-item"><a class="page-link" href="{% querystring page=number %}">{{ number }}</a></li>
-                    {% endif %}
-                {% endfor %}
-                {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" rel="next" href="{% querystring page=page_obj.next_page_number %}">Вперёд</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
+      </div>
+    {% else %}
+      <div class="empty-panel">
+        {% if search_form.q.value or selected_tag %}
+          <p>Проекты не найдены.</p>
+          <a class="site-text-link" href="{% url 'project:project_list' %}">Сбросить фильтры <span aria-hidden="true">→</span></a>
+        {% else %}
+          <p>Проекты пока не созданы.</p>
+        {% endif %}
+      </div>
     {% endif %}
-</div>
-{% endblock %}
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav class="mt-4" aria-label="Страницы каталога">
+        <ul class="pagination site-pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" rel="prev" href="{% querystring page=page_obj.previous_page_number %}">Назад</a></li>
+          {% endif %}
+          {% for number in page_range %}
+            {% if number == page_obj.number %}
+              <li class="page-item active"><span class="page-link" aria-current="page">{{ number }}</span></li>
+            {% elif number == page_obj.paginator.ELLIPSIS %}
+              <li class="page-item disabled"><span class="page-link">{{ number }}</span></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="{% querystring page=number %}">{{ number }}</a></li>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" rel="next" href="{% querystring page=page_obj.next_page_number %}">Вперёд</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+{% endblock maincontent %}

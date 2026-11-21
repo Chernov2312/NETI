@@ -1,8 +1,12 @@
 __all__ = ()
 from django.shortcuts import render
 
+from project.models import Project
+
 
 def home(request):
-    template = 'homepage/home.html'
-    context = {}
-    return render(request, template_name=template, context=context)
+    return render(
+        request,
+        'homepage/home.html',
+        {'recent_projects': Project.objects.get_projects_main()[:3]},
+    )

@@ -1,22 +1,9 @@
-<footer class="container-fluid bg-light text-dark py-4 border-top">
-    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-        
-        <div class="text-center text-md-start">
-            <p class="mb-0 text-muted small">© <span id="current-year"></span> Все права защищены.</p>
-            <a href="{% url 'feedback:form' %}">Обратная связь</a>
-            {% if user.is_staff %}
-                <a class="ms-3" href="{% url 'admin:index' %}">Администрирование</a>
-            {% endif %}
-						<h5>Лицей НГТУ</h5>
-        </div>
-
-        <div class="text-center text-md-end">
-            <h6 class="mb-2 text-muted small fw-semibold">Мы в соцсетях:</h6>
-            <div class="d-flex justify-content-center justify-content-md-end gap-2">
-                <a href="#" class="btn btn-outline-secondary btn-sm rounded-circle px-2 py-1" title="Telegram">TG</a>
-                <a href="#" class="btn btn-outline-secondary btn-sm rounded-circle px-2 py-1" title="VK">VK</a>
-            </div>
-        </div>
-
-    </div>
-</footer>
+<div class="container site-footer-inner">
+  <p class="site-footer-name"><strong>NETI</strong> <span>Лицей НГТУ</span></p>
+  <nav class="site-footer-links" aria-label="Дополнительные ссылки">
+    <a href="{% url 'feedback:form' %}">Обратная связь</a>
+    {% if user.is_staff %}
+      <a href="{% url 'admin:index' %}">Администрирование</a>
+    {% endif %}
+  </nav>
+</div>

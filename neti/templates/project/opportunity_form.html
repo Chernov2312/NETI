@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — NETI{% endblock title %}
+
+{% block maincontent %}
+  <header class="page-banner page-banner-with-panel">
+    <div class="container content-narrow">
+      <a class="site-back-link" href="{% url 'project:opportunity_list' %}"><span aria-hidden="true">←</span> Биржа заданий</a>
+      <div class="page-heading"><h1>{{ title }}</h1></div>
+    </div>
+  </header>
+  <div class="container content-narrow raised-content">
+    <form method="post" class="site-panel panel-padding site-form">
+      {% csrf_token %}
+      {% include "includes/form_fields.html" %}
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Опубликовать</button>
+        <a class="btn btn-outline-secondary" href="{% url 'project:opportunity_list' %}">Отмена</a>
+      </div>
+    </form>
+  </div>
+{% endblock maincontent %}

@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Удаление проекта — NETI{% endblock %}
+{% block title %}Удаление проекта — NETI{% endblock title %}
 
 {% block maincontent %}
-<div class="container py-5">
-  <h1 class="h2 mb-3">Удалить проект «{{ project.name }}»?</h1>
-  <p>Вместе с проектом будут удалены его файлы и оценки.</p>
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Удалить проект</button>
-    <a href="{% url 'project:project_detail' project.pk %}" class="btn btn-outline-secondary">Отмена</a>
-  </form>
-</div>
-{% endblock %}
+  <div class="container content-narrow standard-content">
+    <section class="site-panel panel-padding danger-panel" aria-labelledby="delete-project-heading">
+      <a class="site-text-link" href="{% url 'project:project_detail' project.pk %}"><span aria-hidden="true">←</span> К проекту</a>
+      <h1 id="delete-project-heading" class="form-heading">Удалить проект «{{ project.name }}»?</h1>
+      <p>Вместе с проектом будут удалены его файлы и оценки.</p>
+      <form method="post" class="form-actions">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Удалить проект</button>
+        <a href="{% url 'project:project_detail' project.pk %}" class="btn btn-outline-secondary">Отмена</a>
+      </form>
+    </section>
+  </div>
+{% endblock maincontent %}

@@ -1,18 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Пожаловаться на проект — NETI{% endblock %}
+{% block title %}Пожаловаться на проект — NETI{% endblock title %}
 
 {% block maincontent %}
-<div class="container py-5">
-  <div class="mx-auto col-md-8 col-lg-6">
-    <h1 class="h2 mb-3">Пожаловаться на проект</h1>
-    <p class="text-secondary">{{ project.name }}</p>
-    <form method="post">
+  <header class="page-banner page-banner-with-panel">
+    <div class="container content-narrow">
+      <a class="site-back-link" href="{% url 'project:project_detail' project.pk %}"><span aria-hidden="true">←</span> К проекту</a>
+      <div class="page-heading">
+        <div>
+          <h1>Пожаловаться на проект</h1>
+          <p class="page-meta">{{ project.name }}</p>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="container content-narrow raised-content">
+    <form method="post" class="site-panel panel-padding site-form">
       {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary">Отправить жалобу</button>
-      <a class="btn btn-outline-secondary" href="{% url 'project:project_detail' project.pk %}">Отмена</a>
+      {% include "includes/form_fields.html" %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Отправить жалобу</button>
+        <a class="btn btn-outline-secondary" href="{% url 'project:project_detail' project.pk %}">Отмена</a>
+      </div>
     </form>
   </div>
-</div>
-{% endblock %}
+{% endblock maincontent %}

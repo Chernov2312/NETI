@@ -11,6 +11,7 @@ class User(AbstractUser, UpdateBaseModel):
     class Role(models.TextChoices):
         STUDENT = 'student', _('Студент')
         MODERATOR = 'moderator', _('Модератор')
+        UNIVERSITY = 'university', _('Представитель вуза')
 
     objects = UserManager()
     username = models.CharField(

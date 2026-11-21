@@ -4,7 +4,14 @@ from django import forms
 from django.db import transaction
 from PIL import Image as PillowImage
 
-from project.models import Image, MainImage, Project, ProjectReport
+from project.models import (
+    Image,
+    MainImage,
+    Opportunity,
+    Project,
+    ProjectReport,
+)
+from project.utils import has_pdf_signature
 
 MAX_DOCUMENT_SIZE = 10 * 1024 * 1024
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
@@ -19,9 +26,9 @@ class DocumentField(forms.FileField):
             return None
         if upload.size > MAX_DOCUMENT_SIZE:
             raise forms.ValidationError('Документ не должен превышать 10 МБ.')
-        header = upload.read(5)
-        upload.seek(0)
-        if not upload.name.lower().endswith('.pdf') or header != b'%PDF-':
+        if not upload.name.lower().endswith('.pdf') or not has_pdf_signature(
+            upload,
+        ):
             raise forms.ValidationError('Загрузите документ в формате PDF.')
         return upload
 
@@ -187,6 +194,19 @@ class ProjectSearchForm(forms.Form):
             attrs={'type': 'search', 'class': 'form-control'},
         ),
     )
+
+
+class OpportunityForm(forms.ModelForm):
+    class Meta:
+        model = Opportunity
+        fields = (
+            'title', 'kind', 'organization', 'description',
+            'contact_email', 'deadline',
+        )
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 6}),
+            'deadline': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 
 class ProjectReportForm(forms.ModelForm):

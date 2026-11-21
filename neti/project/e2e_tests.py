@@ -92,11 +92,24 @@ class ProjectBrowserTests(StaticLiveServerTestCase):
         photo = page.get_by_alt_text(f'Изображение проекта {name}')
         photo.scroll_into_view_if_needed()
         expect(photo).to_have_js_property('naturalWidth', 540)
+        preview_link = page.get_by_role('link', name='Открыть PDF')
+        expect(preview_link).to_have_attribute('target', '_blank')
+        preview_url = preview_link.get_attribute('href')
+        preview = page.request.get(preview_url)
+        self.assertTrue(preview.ok)
+        self.assertEqual(preview.headers['content-type'], 'application/pdf')
+        self.assertTrue(
+            preview.headers['content-disposition'].startswith('inline'),
+        )
+        self.assertEqual(preview.body(), pdf.read_bytes())
         with page.expect_download() as download:
             page.get_by_role('link', name='Скачать документ').click()
         self.assertEqual(download.value.path().read_bytes(), pdf.read_bytes())
 
         page.get_by_role('link', name='Редактировать').click()
+        edit_preview = page.get_by_role('link', name='Открыть текущий PDF')
+        expect(edit_preview).to_have_attribute('href', preview_url)
+        expect(edit_preview).to_have_attribute('target', '_blank')
         page.get_by_label('Описание').fill('Описание после редактирования')
         page.get_by_role('button', name='Сохранить', exact=True).click()
         description = page.get_by_text('Описание после редактирования')
